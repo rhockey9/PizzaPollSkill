@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Alexa.NET.Request;
 using Alexa.NET.Request.Type;
 using Alexa.NET.Response;
 using Amazon.Lambda.Core;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -22,7 +24,7 @@ namespace PizzaPollSkill
         /// <param name="input"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
+        public async Task<SkillResponse> FunctionHandler(SkillRequest input, ILambdaContext context)
         {
             SkillResponse response = new SkillResponse();
             response.Response = new ResponseBody();
@@ -69,12 +71,14 @@ namespace PizzaPollSkill
                     case "GetPizzaVeggieToppingIntent":
                         log.LogLine($"GetPizzaVeggieToppingIntent sent: send veggie pizza topping");
                         innerResponse = new PlainTextOutputSpeech();
-                        (innerResponse as PlainTextOutputSpeech).Text = "Pineapple";
+                        (innerResponse as PlainTextOutputSpeech).Text = "Green Peppers";
                         break;
                     case "GetPizzaSideIntent":
                         log.LogLine($"GetPizzaSideIntent sent: send pizza side");
                         innerResponse = new PlainTextOutputSpeech();
-                        (innerResponse as PlainTextOutputSpeech).Text = "Breadsticks";
+                        //(innerResponse as PlainTextOutputSpeech).Text = "Buffalo Wings";
+                        (innerResponse as PlainTextOutputSpeech).Text = await CallAPI(); ;
+                        //string test = await CallAPI();
                         break;
                     default:
                         log.LogLine($"Unknown intent: " + intentRequest.Intent.Name);
@@ -90,6 +94,17 @@ namespace PizzaPollSkill
             log.LogLine(JsonConvert.SerializeObject(response));
 
             return response;
+        }
+
+        private async Task<string> CallAPI()
+        {
+            HttpClient client = new HttpClient();
+            string response = await client.GetStringAsync("http://35.168.219.125/api/dice/5");
+            dynamic data = JObject.Parse(response);
+            
+            //client.
+
+            return data.User;
         }
     }
 }
